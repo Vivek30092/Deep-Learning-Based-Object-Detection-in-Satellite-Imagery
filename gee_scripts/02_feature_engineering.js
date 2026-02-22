@@ -14,6 +14,7 @@ var composite = ee.ImageCollection("COPERNICUS/S2_SR")
     .filterBounds(indore)
     .filterDate('2023-01-01', '2023-12-31')
     .filter(ee.Filter.lt('CLOUDY_PIXEL_PERCENTAGE', 10))
+    .select(['B2', 'B3', 'B4', 'B8'])  // Select only needed bands BEFORE median to avoid incompatible band sets
     .median()
     .clip(indore);
 
@@ -70,7 +71,7 @@ Map.addLayer(ndbi, ndbiVis, 'NDBI (Built-up)', false);
 // Texture helps distinguish buildings from open areas
 var nir = composite.select('B8');
 
-var glcm = nir.glcmTexture({ size: 3 });
+var glcm = nir.toUint16().glcmTexture({ size: 3 });
 
 // Select useful texture measures
 var contrast = glcm.select('B8_contrast').rename('texture_contrast');
@@ -80,12 +81,13 @@ Map.addLayer(contrast, { min: 0, max: 500, palette: ['black', 'white'] },
     'Texture Contrast', false);
 
 // Step 5: Combine all features into enhanced image
-var enhancedImage = composite
-    .addBands(ndvi)
-    .addBands(ndwi)
-    .addBands(ndbi)
-    .addBands(contrast)
-    .addBands(entropy);
+// Cast all bands to Float32 to ensure consistent data types for export
+var enhancedImage = composite.toFloat()
+    .addBands(ndvi.toFloat())
+    .addBands(ndwi.toFloat())
+    .addBands(ndbi.toFloat())
+    .addBands(contrast.toFloat())
+    .addBands(entropy.toFloat());
 
 print('Enhanced Image Bands:', enhancedImage.bandNames());
 

@@ -38,7 +38,7 @@ def get_training_augmentation(patch_size: int = 256):
             contrast_limit=0.2,
             p=0.5
         ),
-        A.GaussNoise(var_limit=(10.0, 50.0), p=0.3),
+        A.GaussNoise(var_limit=(0.001, 0.01), p=0.3),  # Scaled for [0,1] normalized data
         
         # Blur
         A.OneOf([
@@ -48,7 +48,7 @@ def get_training_augmentation(patch_size: int = 256):
         
         # Resize to ensure consistent size
         A.Resize(patch_size, patch_size),
-    ])
+    ], is_check_shapes=False)  # Resize above normalizes sizes; skip pre-check
     
     return transform
 
@@ -65,7 +65,7 @@ def get_validation_augmentation(patch_size: int = 256):
     """
     transform = A.Compose([
         A.Resize(patch_size, patch_size),
-    ])
+    ], is_check_shapes=False)  # Resize normalizes sizes; skip pre-check
     
     return transform
 

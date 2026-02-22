@@ -54,7 +54,7 @@ classes:
 image:
   patch_size: 256  # pixels
   overlap: 32  # overlap between patches
-  input_channels: 8  # RGB + NIR + NDVI + NDWI + 2 texture bands
+  input_channels: 9  # B2+B3+B4+B8 + NDVI+NDWI+NDBI + contrast+entropy = 9 bands
   normalize: true
   normalization_method: "percentile"  # or "minmax", "standard"
   percentile_range: [2, 98]
@@ -74,14 +74,14 @@ model:
   architecture: "unet"  # U-Net for semantic segmentation
   encoder: "resnet34"  # Encoder backbone (resnet34, efficientnetb0, etc.)
   encoder_weights: "imagenet"  # Pre-trained weights
-  input_shape: [256, 256, 8]
+  input_shape: [256, 256, 9]  # 9 bands from Indore_Enhanced_Features.tif
   n_classes: 5  # background + 4 object classes
   activation: "softmax"  # softmax for multi-class, sigmoid for binary
   
 # Training Parameters
 training:
-  batch_size: 8
-  epochs: 100
+  batch_size: 2  # Reduced from 8 to avoid out-of-memory errors on CPU
+  epochs: 10
   learning_rate: 0.0001
   optimizer: "adam"
   loss_function: "categorical_crossentropy"  # or "dice_loss", "focal_loss"

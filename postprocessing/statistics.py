@@ -149,22 +149,33 @@ def plot_class_distribution(stats_df: pd.DataFrame, output_path: str):
         output_path: Output path for plot
     """
     fig, axes = plt.subplots(1, 2, figsize=(14, 5))
-    
-    # Plot 1: Pixel count
+
+    # Hardcoded colour palette per class name
+    colour_map = {
+        'background': '#333333',
+        'buildings':  '#e74c3c',
+        'roads':      '#2980b9',
+        'water':      '#00bcd4',
+        'vegetation': '#27ae60',
+    }
+    colours = [colour_map.get(str(name).lower(), '#888888')
+               for name in stats_df['Class Name']]
+
+    # Plot 1: Pixel count bar chart
     ax = axes[0]
-    sns.barplot(data=stats_df, x='Class Name', y='Pixel Count', ax=ax)
+    ax.bar(stats_df['Class Name'], stats_df['Pixel Count'], color=colours, edgecolor='white')
     ax.set_title('Pixel Count by Class')
     ax.set_xlabel('Class')
     ax.set_ylabel('Pixel Count')
     ax.tick_params(axis='x', rotation=45)
-    
-    # Plot 2: Area percentage
+    ax.grid(axis='y', alpha=0.3)
+
+    # Plot 2: Area percentage pie chart
     ax = axes[1]
-    colors = ['#%02x%02x%02x' % tuple(c['color']) for c in stats_df.to_dict('records')]
     ax.pie(stats_df['Percentage'], labels=stats_df['Class Name'], autopct='%1.1f%%',
-           startangle=90)
-    ax.set_title('Area Distribution by Class')
-    
+           colors=colours, startangle=90)
+    ax.set_title('Area Distribution by Class (%)' )
+
     plt.tight_layout()
     plt.savefig(output_path, dpi=150, bbox_inches='tight')
     print(f"Saved plot to: {output_path}")

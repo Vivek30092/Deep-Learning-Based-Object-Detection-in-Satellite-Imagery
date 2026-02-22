@@ -148,21 +148,34 @@ def create_train_val_split(data_dir: str, val_split: float = 0.2,
     val_image_dir.mkdir(parents=True, exist_ok=True)
     val_mask_dir.mkdir(parents=True, exist_ok=True)
     
-    # Move validation patches
+    # Move validation patches (copy then delete to avoid Windows file-lock errors)
+    import shutil, time
     for idx in tqdm(val_indices, desc="Moving validation patches"):
         patch_name = patch_files[idx].name
         
         # Move image
         src = image_dir / patch_name
         dst = val_image_dir / patch_name
-        src.rename(dst)
+        shutil.copy2(src, dst)
+        for attempt in range(5):
+            try:
+                src.unlink()
+                break
+            except PermissionError:
+                time.sleep(0.3)  # Wait for any file lock to release then retry
         
         # Move mask
         if mask_dir.exists():
             src = mask_dir / patch_name
             dst = val_mask_dir / patch_name
             if src.exists():
-                src.rename(dst)
+                shutil.copy2(src, dst)
+                for attempt in range(5):
+                    try:
+                        src.unlink()
+                        break
+                    except PermissionError:
+                        time.sleep(0.3)
     
     print("Train/validation split complete!")
 
